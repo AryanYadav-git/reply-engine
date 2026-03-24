@@ -1,27 +1,48 @@
-import { pgTable, uuid, text, timestamp, boolean, jsonb } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  boolean,
+  jsonb,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
-export const messages = pgTable("messages", {
-  id: uuid("id").primaryKey().defaultRandom(),
+import { threads } from "./threads";
 
-  threadId: uuid("thread_id").notNull(),
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
 
-  gmailMessageId: text("gmail_message_id").notNull(),
+    threadId: uuid("thread_id")
+      .notNull()
+      .references(() => threads.id, { onDelete: "cascade" }),
 
-  from: text("from").notNull(),
+    gmailMessageId: text("gmail_message_id").notNull(),
 
-  to: text("to").notNull(),
+    from: text("from").notNull(),
 
-  subject: text("subject"),
+    to: text("to").notNull(),
 
-  bodyText: text("body_text"),
+    subject: text("subject"),
 
-  bodyHtml: text("body_html"),
+    bodyText: text("body_text"),
 
-  headers: jsonb("headers"),
+    bodyHtml: text("body_html"),
 
-  isInbound: boolean("is_inbound"),
+    headers: jsonb("headers"),
 
-  receivedAt: timestamp("received_at"),
+    isInbound: boolean("is_inbound"),
 
-  createdAt: timestamp("created_at").defaultNow()
-})
+    receivedAt: timestamp("received_at"),
+
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("messages_thread_id_gmail_message_id_unique").on(
+      t.threadId,
+      t.gmailMessageId
+    ),
+  ]
+);

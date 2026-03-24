@@ -1,17 +1,39 @@
-import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  integer,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
-export const threads = pgTable("threads", {
-  id: uuid("id").primaryKey().defaultRandom(),
+import { gmailAccounts } from "./gmailAccounts";
 
-  gmailAccountId: uuid("gmail_account_id").notNull(),
+/** Gmail thread (conversation) per linked account; `messages` attach via `thread_id`. */
+export const threads = pgTable(
+  "threads",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
 
-  gmailThreadId: text("gmail_thread_id").notNull(),
+    gmailAccountId: integer("gmail_account_id")
+      .notNull()
+      .references(() => gmailAccounts.id, { onDelete: "cascade" }),
 
-  subject: text("subject"),
+    gmailThreadId: text("gmail_thread_id").notNull(),
 
-  snippet: text("snippet"),
+    subject: text("subject"),
 
-  lastMessageAt: timestamp("last_message_at"),
+    snippet: text("snippet"),
 
-  createdAt: timestamp("created_at").defaultNow()
-})
+    lastMessageAt: timestamp("last_message_at"),
+
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("threads_gmail_account_id_gmail_thread_id_unique").on(
+      t.gmailAccountId,
+      t.gmailThreadId
+    ),
+  ]
+);

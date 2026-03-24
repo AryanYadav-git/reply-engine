@@ -1,9 +1,17 @@
 import { Hono } from "hono";
-import { google, googleCallback, register } from "../controllers/auth.controller";
+import {
+  google,
+  googleCallback,
+  me,
+  signin,
+  signup,
+} from "../controllers/auth.controller";
 
 const auth = new Hono();
 
-auth.get('/register', (c) => register(c))
+auth.post('/signup', (c) => signup(c))
+auth.post('/signin', (c) => signin(c))
+auth.get('/me', (c) => me(c))
 
 auth.get('/google', (c) => google(c))
 
